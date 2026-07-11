@@ -428,4 +428,8 @@ def health():
 
 # Run the server on port 8080 which is what Railway expects (so many issues with this bro wtf)
 if __name__ == "__main__":
+<<<<<<< HEAD
     uvicorn.run(app, host="0.0.0.0", port=8080)
+=======
+    uvicorn.run(app, host="0.0.0.0", port=8080)
+>>>>>>> e087a96fe4e208bb2bb764c0c5679b89fd91e6e6
