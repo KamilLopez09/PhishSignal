@@ -323,10 +323,10 @@ def extractFeatures(url):
     features["ratio_intHyperlinks"] = 0.5
     features["ratio_extRedirection"] = 0
     features["external_favicon"] = 0
-    features["links_in_tags"] = 0.5
-    features["ratio_intMedia"] = 0.5
-    features["ratio_extMedia"] = 0.1
-    features["safe_anchor"] = 0.5
+    features["links_in_tags"] = 50
+    features["ratio_intMedia"] = 50
+    features["ratio_extMedia"] = 20
+    features["safe_anchor"] = 40
     features["empty_title"] = 0
     features["domain_in_title"] = 1
     features["domain_with_copyright"] = 1
