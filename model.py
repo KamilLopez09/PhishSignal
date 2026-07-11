@@ -23,6 +23,7 @@ import whois
 import datetime
 import logging
 import threading
+import requests
 
 # Suppress whois error messages
 logging.getLogger("whois").setLevel(logging.CRITICAL)
@@ -133,40 +134,36 @@ selectedFeatures = saved["features"]
 # Cache for domain age lookups so we never look up the same domain twice
 domainCache = {}
 
-# getDomainAge: This function fetches the age of a domain in days using WHOIS
 def getDomainAge(cleanDomain):
-
-    # Check cache first so we dont repeat slow network calls
     if cleanDomain in domainCache:
         return domainCache[cleanDomain]
 
-    # Run WHOIS in a separate thread so we can enforce a hard timeout. this checks for the age
     result = {"age": -1}
 
-    def doWhois():
+    def doRdap():
         try:
-            import io, sys
-            sys.stderr = io.StringIO()
-            domainInfo = whois.whois(cleanDomain)
-            sys.stderr = sys.__stderr__
-            creationDate = domainInfo.creation_date
+            resp = requests.get(f"https://rdap.org/domain/{cleanDomain}", timeout=3)
+            if resp.status_code != 200:
+                return
 
-            # Sometimes WHOIS returns a list of dates, we take the first one
-            if isinstance(creationDate, list):
-                creationDate = creationDate[0]
+            data = resp.json()
+            creationDate = None
+            for event in data.get("events", []):
+                if event.get("eventAction") == "registration":
+                    creationDate = event.get("eventDate")
+                    break
 
-            # Calculate how many days old the domain is
             if creationDate:
-                result["age"] = (datetime.datetime.now() - creationDate.replace(tzinfo=None)).days
-        except:
-            sys.stderr = sys.__stderr__
+                parsed = datetime.datetime.fromisoformat(creationDate.replace("Z", "+00:00"))
+                now = datetime.datetime.now(datetime.timezone.utc)
+                result["age"] = (now - parsed).days
+        except Exception:
+            pass
 
-    # Start the WHOIS thread and wait a max of 3 seconds before giving up
-    t = threading.Thread(target=doWhois)
+    t = threading.Thread(target=doRdap)
     t.start()
     t.join(timeout=3)
 
-    # Save to cache only if the lookup actually succeeded
     if result["age"] > 0:
         domainCache[cleanDomain] = result["age"]
 
@@ -428,8 +425,4 @@ def health():
 
 # Run the server on port 8080 which is what Railway expects (so many issues with this bro wtf)
 if __name__ == "__main__":
-<<<<<<< HEAD
     uvicorn.run(app, host="0.0.0.0", port=8080)
-=======
-    uvicorn.run(app, host="0.0.0.0", port=8080)
->>>>>>> e087a96fe4e208bb2bb764c0c5679b89fd91e6e6
