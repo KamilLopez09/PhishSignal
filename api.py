@@ -58,3 +58,8 @@ def debug_rdap():
 def debug_age():
     from model import getDomainAge
     return {"age": getDomainAge("protonmail.com")}
+
+@app.get("/debug-features")
+def debug_features(url: str):
+    from model import extractFeatures  # adjust name if it's called something else in model.py
+    return extractFeatures(url)
