@@ -313,6 +313,8 @@ def extractFeatures(url):
     cleanDomain = hostname.replace("www.", "")
     domainAge = getDomainAge(cleanDomain)
     features["domain_age"] = domainAge
+    # Please note that if the domain has no WHOIS record, we set domainAge to -1 and flag it as suspicious.
+    # We tried our best to debug this but oh well :/
     features["dns_record"] = 1 if domainAge > 0 else 0
 
     if domainAge == -1:
