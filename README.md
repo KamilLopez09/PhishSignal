@@ -1,7 +1,7 @@
-# PhishGuard
+# PhishSignal
 ### Developed by Kamil Lopez, Mahdi Murshed, Rayyan Rahman, & Rahidul Alam
 
-PhishGuard is a website, API, and machine-learning-model that detects phishing URLs in real time. It's trained on 11,000+ labeled crowdsourced websites and analyzes dozens of structural and domain-level signals through features such as URL patterns, subdomain structure, domain age, and more in order to flag suspicious links before you click them.
+PhishSignal is a website, API, and machine-learning-model that detects phishing URLs in real time. It's trained on 11,000+ labeled crowdsourced websites and analyzes dozens of structural and domain-level signals through features such as URL patterns, subdomain structure, domain age, and more in order to flag suspicious links before you click them.
 
 ## How it works
 1. An inputted URL is submitted to the API
@@ -9,7 +9,7 @@ PhishGuard is a website, API, and machine-learning-model that detects phishing U
 3. A trained machine-learning model returns a phishing-risk score along with the specific signals that triggered it.
 
 ## Interpretation
-The score PhishGuard returns is **NOT** a measurement of how "phishy" a website's content is, nor does it report the percentage of malicious material found on the page. PhishGuard doesn't scan page content at all: it never visits or renders the destination site.
+The score PhishSignal returns is **NOT** a measurement of how "phishy" a website's content is, nor does it report the percentage of malicious material found on the page. PhishSignal doesn't scan page content at all: it never visits or renders the destination site.
 
 Instead, the score represents the model's **confidence that the URL matches patterns typical of phishing websites** based entirely on:
 - The structure of the URL itself (length, special characters, subdomains, keywords, etc.)
