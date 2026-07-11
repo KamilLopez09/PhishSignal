@@ -1,5 +1,8 @@
 ''' Import libraries '''
 
+# Import requests: This is used to make HTTP requests to external APIs
+import requests
+
 # Import FastAPI: This is used to create the API server
 from fastapi import FastAPI
 
