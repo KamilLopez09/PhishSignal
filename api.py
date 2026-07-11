@@ -36,3 +36,16 @@ def analyzeURL(url: str):
 
     # Return the result as JSON
     return result
+
+# /health: This route is used by Railway to check if the server is running
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+@app.get("/debug-rdap")
+def debug_rdap():
+    try:
+        resp = requests.get("https://rdap.org/domain/protonmail.com", timeout=5)
+        return {"status_code": resp.status_code, "body": resp.text[:800]}
+    except Exception as e:
+        return {"error": str(e)}
