@@ -44,27 +44,3 @@ def analyzeURL(url: str):
 @app.get("/health")
 def health():
     return {"status": "ok"}
-
-@app.get("/debug-rdap")
-def debug_rdap():
-    try:
-        resp = requests.get("https://rdap.org/domain/protonmail.com", timeout=5)
-        data = resp.json()
-        return {"status_code": resp.status_code, "events": data.get("events")}
-    except Exception as e:
-        return {"error": str(e)}
-    
-@app.get("/debug-age")
-def debug_age():
-    from model import getDomainAge
-    return {"age": getDomainAge("protonmail.com")}
-
-@app.get("/debug-features")
-def debug_features(url: str):
-    from model import extractFeatures  # adjust name if it's called something else in model.py
-    return extractFeatures(url)
-
-@app.get("/debug-google")
-def debug_google():
-    from model import checkGoogleIndex  # use whatever the real function name is
-    return {"result": checkGoogleIndex("protonmail.com")}
