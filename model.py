@@ -369,8 +369,8 @@ def analyze(url):
     score = int(round(proba[1] * 100))
 
     # If the model flagged it but no specific signals were triggered
-    if not signals and score >= 40:
-        signals.append("Statistical pattern matches known phishing URLs in the training data")
+    if not signals and score >= 50:
+        signals.append("Uncertain regarding phishing: no signals detected.")
 
     # If everything looks clean
     if not signals:
@@ -382,3 +382,50 @@ def analyze(url):
         "score": score,
         "signals": signals
     }
+
+''' Start Server '''
+
+# Import uvicorn: This is used to run the FastAPI server
+import uvicorn
+
+# Import FastAPI and CORSMiddleware
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+# Create the FastAPI app
+app = FastAPI()
+
+'''
+CORSMiddleware allows the website to talk to the API.
+Without it the browser blocks the request for security reasons
+because the website and API are on different domains.
+'''
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
+
+
+''' Routes '''
+
+# /analyze: This route takes a URL and returns a score and signals <-- barely know wtf im doing
+@app.get("/analyze")
+def analyzeURL(url: str):
+
+    # Run the full analysis pipeline on the given URL
+    result = analyze(url)
+
+    # Return the result as JSON, FastAPI handles the conversion automatically
+    return result
+
+# /health: This route is used by Railway to check if the server is running
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+
+# Run the server on port 8080 which is what Railway expects (so many issues with this bro wtf)
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8080)
