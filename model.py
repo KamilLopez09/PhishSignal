@@ -426,7 +426,8 @@ def health():
 def debug_rdap():
     try:
         resp = requests.get("https://rdap.org/domain/protonmail.com", timeout=5)
-        return {"status_code": resp.status_code, "body": resp.text[:800]}
+        data = resp.json()
+        return {"status_code": resp.status_code, "events": data.get("events")}
     except Exception as e:
         return {"error": str(e)}
 
