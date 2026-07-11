@@ -43,8 +43,20 @@ print(f"Dataset loaded: {df.shape[0]} rows, {df.shape[1]} columns")
 # Convert status to binary (0 is legit and 1 is phishing)
 df['status'] = df['status'].map({'phishing': 1, 'legitimate': 0})
 
-# Select only numerical columns so we can run correlation math on them
-numericalDf = df.select_dtypes(include=['float64', 'int64'])
+'''Only consider features that extractFeatures() can actually compute
+from a URL alone: excludes google_index, page_rank, and other
+page-content features that would require live web scraping.'''
+REALFEATURES = [
+    "length_url", "length_hostname", "ip", "nb_dots", "nb_hyphens", "nb_at", "nb_qm",
+    "nb_and", "nb_eq", "nb_slash", "nb_semicolumn", "nb_www", "nb_com", "https_token",
+    "ratio_digits_url", "ratio_digits_host", "nb_subdomains", "tld_in_subdomain",
+    "abnormal_subdomain", "prefix_suffix", "shortening_service", "length_words_raw",
+    "shortest_word_host", "longest_words_raw", "longest_word_host", "longest_word_path",
+    "avg_words_raw", "avg_word_host", "avg_word_path", "phish_hints", "suspecious_tld",
+    "domain_age", "dns_record"
+]
+
+numericalDf = df[REALFEATURES + ['status']]
 
 '''
 Compute the correlation matrix.
@@ -309,30 +321,6 @@ def extractFeatures(url):
         signals.append(f"Domain is only {domainAge} days old, phishing sites are almost always newly registered")
     elif domainAge < 180:
         signals.append(f"Domain is relatively new at {domainAge} days old")
-
-
-    ''' Default Page-Level Features '''
-
-    '''
-    These features normally require fetching and scanning the actual webpage.
-    Since we are analyzing URLs only, we set them to neutral default values.
-    They will be replaced with real values in a future version using web scraping.
-    '''
-    features["statistical_report"] = 0
-    features["nb_hyperlinks"] = 10
-    features["ratio_intHyperlinks"] = 0.5
-    features["ratio_extRedirection"] = 0
-    features["external_favicon"] = 0
-    features["links_in_tags"] = 50
-    features["ratio_intMedia"] = 50
-    features["ratio_extMedia"] = 20
-    features["safe_anchor"] = 40
-    features["empty_title"] = 0
-    features["domain_in_title"] = 1
-    features["domain_with_copyright"] = 1
-    features["domain_registration_length"] = 365
-    features["google_index"] = 0
-    features["page_rank"] = 4
 
     return features, signals
 
