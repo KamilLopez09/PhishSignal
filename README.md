@@ -29,5 +29,8 @@ The score should be treated as a **risk indicator to prompt closer inspection**:
 
 **NOTE**: Please keep in mind that an uncertain range between 40-59 indicates that the model is not confident in its scoring and may be ambivalent regarding the URL composition and/or domain history. 
 
+## Crowdsourcing
+Once the website is implemented, users will be able to flag results that seem incorrect. For example, a legitimate site scored as phishing, or a phishing site scored as safe. Reported URLs will help identify gaps in the model's training data and guide future improvements.
+
 ## Hosting
 As of now, a website is in the works of implementation. Any further updates will be issued and announced here.
