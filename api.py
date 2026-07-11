@@ -63,3 +63,8 @@ def debug_age():
 def debug_features(url: str):
     from model import extractFeatures  # adjust name if it's called something else in model.py
     return extractFeatures(url)
+
+@app.get("/debug-google")
+def debug_google():
+    from model import checkGoogleIndex  # use whatever the real function name is
+    return {"result": checkGoogleIndex("protonmail.com")}

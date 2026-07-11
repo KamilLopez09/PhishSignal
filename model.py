@@ -331,7 +331,7 @@ def extractFeatures(url):
     features["domain_in_title"] = 1
     features["domain_with_copyright"] = 1
     features["domain_registration_length"] = 365
-    features["google_index"] = 1
+    features["google_index"] = 0
     features["page_rank"] = 4
 
     return features, signals
