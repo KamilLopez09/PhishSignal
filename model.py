@@ -422,6 +422,13 @@ def analyzeURL(url: str):
 def health():
     return {"status": "ok"}
 
+@app.get("/debug-rdap")
+def debug_rdap():
+    try:
+        resp = requests.get("https://rdap.org/domain/protonmail.com", timeout=5)
+        return {"status_code": resp.status_code, "body": resp.text[:800]}
+    except Exception as e:
+        return {"error": str(e)}
 
 # Run the server on port 8080 which is what Railway expects (so many issues with this bro wtf)
 if __name__ == "__main__":
