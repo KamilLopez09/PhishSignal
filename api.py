@@ -53,3 +53,8 @@ def debug_rdap():
         return {"status_code": resp.status_code, "events": data.get("events")}
     except Exception as e:
         return {"error": str(e)}
+    
+@app.get("/debug-age")
+def debug_age():
+    from model import getDomainAge
+    return {"age": getDomainAge("protonmail.com")}
