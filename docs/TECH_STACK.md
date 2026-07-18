@@ -1,6 +1,6 @@
 # PhishSignal — Tech Stack Documentation
 
-**Scope:** As-built stack in `theoneandonlyrahi/PhishSignal` (`master`) plus recommended stack for the larger phishing-detector site.
+**Scope:** As-built stack on `master`.
 
 ---
 
@@ -10,27 +10,31 @@
 
 | Layer | Choice | Version / notes |
 |---|---|---|
-| Language | Python 3 | Bytecode in history suggests 3.11 |
-| API framework | FastAPI | Declarative routes + automatic OpenAPI |
-| ASGI server | Uvicorn | Implied by FastAPI ecosystem / Railway deploys |
-| ML | scikit-learn `RandomForestClassifier` | `n_estimators=200`, `n_jobs=-1`, `random_state=42` |
-| Data | pandas + numpy | CSV load, correlation, vectors |
-| Serialization | pickle | `model.pkl` = `{ model, scaler, features }` |
+| Language | Python 3.11+ | API + ML |
+| API framework | FastAPI | `/analyze`, `/health` |
+| ASGI server | Uvicorn | Local API process |
+| Frontend | Next.js 14 (`web/`) | Analyzer UI |
+| ML | scikit-learn `RandomForestClassifier` | Served from `model.pkl` |
+| Data | pandas + numpy | Train path only |
+| Serialization | pickle | `{ model, scaler, features }` |
 | HTTP client | requests | RDAP domain-age lookup |
-| Domain intel | RDAP (`rdap.org`) + `python-whois` (dep present) | Live path uses RDAP in a timed thread |
-| CORS | `fastapi.middleware.cors` | Dev: allow all origins/methods/headers |
+| Domain intel | RDAP (`rdap.org`) | Timed thread; age `-1` on failure |
+| CORS | env `CORS_ORIGINS` | Empty → `*` (local); set origins when needed |
+| Rate limit | in-process token bucket | `/analyze` per client IP |
 
 ### 1.2 Repository layout
 
 ```
 PhishSignal/
-├── api.py              # FastAPI application (routes + CORS)
-├── model.py            # Train + feature extract + analyze()  [coupled]
+├── api.py              # FastAPI (CORS + rate limit + validate)
+├── model.py            # Load pickle (default) / optional train + analyze()
 ├── model.pkl           # Trained model + StandardScaler + feature list
-├── apidataset.csv      # ~11,430 labeled URLs × ~89 columns
-├── requirements.txt    # fastapi, uvicorn, sklearn, pandas, numpy, python-whois, requests
-├── README.md           # Product semantics + crowdsourcing intent
-└── docs/               # PRD / stack / flows (this documentation set)
+├── apidataset.csv      # Training data (~11k rows)
+├── requirements.txt
+├── deploy/             # Platform config artifacts (docker / railway / vercel)
+├── web/                # Next.js analyzer
+├── docs/               # PRD / stack / flows / integration
+└── README.md
 ```
 
 ### 1.3 Dependencies (`requirements.txt`)
@@ -41,11 +45,10 @@ uvicorn
 scikit-learn
 pandas
 numpy
-python-whois
 requests
 ```
 
-No frontend package, no database driver, no auth library in-repo today.
+Frontend deps live under `web/package.json`. No database or auth library in MVP.
 
 ### 1.4 Data & model artifacts
 
@@ -63,15 +66,13 @@ No frontend package, no database driver, no auth library in-repo today.
 | Service | Purpose | Failure mode in code |
 |---|---|---|
 | `https://rdap.org/domain/{domain}` | Domain registration date → age in days | Timeout 3s / errors → age `-1`, `dns_record=0`, signal appended |
-| (Planned) Railway health checks | Hit `GET /health` | N/A |
+| Local health | `GET /health` | Process liveness check |
 
-### 1.6 Architectural smells to fix before scale
+### 1.6 Residual smells
 
-1. **Train-on-import:** importing `model` from `api` executes full CSV load + train + dump + reload.  
-2. **Monolith module:** training, feature engineering, and serving share one file.  
-3. **Wide-open CORS** unsuitable for production abuse control.  
-4. **GET with URL query** — long/odd URLs may hit length limits; POST JSON is preferable for the site.  
-5. **Branch divergence:** empty `main` vs code on `master`.
+1. **Coupled module:** training helpers still live in `model.py` (boot defaults to pickle load).  
+2. **GET with URL query** — very long URLs may hit length limits; POST JSON later.  
+3. **In-process rate limit** — resets per replica; edge WAF still recommended for public.
 
 ---
 
@@ -106,10 +107,9 @@ Designed to wrap the existing Python ML API rather than rewrite it.
 
 | Concern | Recommendation | Rationale |
 |---|---|---|
-| Framework | Next.js (React) or plain Vite + React | Fast analyzer UX, easy deploy |
+| Framework | Next.js (React) or plain Vite + React | Fast analyzer UX |
 | Styling | Project design system / CSS variables | Match product branding; avoid generic AI-slop look |
 | API client | `fetch` / typed client from OpenAPI | Single contract with FastAPI |
-| Hosting | Vercel / Cloudflare Pages / Netlify | Static+SSR; API stays on Python host |
 
 ### 2.3 Backend / API
 
@@ -126,10 +126,10 @@ Designed to wrap the existing Python ML API rather than rewrite it.
 
 | Concern | Recommendation |
 |---|---|
-| DB | Postgres (Railway/Supabase/Neon) or SQLite for early MVP |
+| DB | Postgres or SQLite for early MVP |
 | Tables | `analyses`, `reports`, `reviewed_samples` |
 | Jobs | Cron/worker for export → retrain → artifact publish |
-| Secrets | Platform env vars — never commit keys |
+| Secrets | Env vars — never commit keys |
 
 ### 2.5 MLOps (lightweight)
 
@@ -137,18 +137,9 @@ Designed to wrap the existing Python ML API rather than rewrite it.
 |---|---|
 | Train offline | `python train.py` in CI or local |
 | Evaluate | accuracy + confusion matrix + band calibration |
-| Artifact store | Git LFS / release asset / S3 — versioned `model.pkl` |
+| Artifact store | Git LFS / release asset / object storage — versioned `model.pkl` |
 | Serve | Load pickle once at startup; hot-reload optional |
 | Monitor | Score histogram, RDAP fail %, user report rate |
-
-### 2.6 Hosting topology (aligned with README)
-
-| Service | Platform options |
-|---|---|
-| API | Railway, Fly.io, Render, Cloud Run |
-| Frontend | Vercel / Pages |
-| DB | Managed Postgres |
-| Observability | Platform logs + optional Sentry |
 
 ---
 
@@ -208,7 +199,7 @@ python -m venv .venv
 # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
-# WARNING: importing model.py currently retrains then serves
+# Default: load model.pkl (set TRAIN_MODEL=1 only to retrain)
 uvicorn api:app --reload --host 0.0.0.0 --port 8000
 
 # Example
@@ -220,7 +211,23 @@ OpenAPI UI (when server running): `http://localhost:8000/docs`
 
 ---
 
-## 6. Decision log (recommended defaults for the larger project)
+## 6. Frontend UI component sources
+
+Pre-existing third-party UI (GodUI, Uiverse, Chakra Charts, shadcn) is cataloged with **docs URLs, registry URLs, local paths, and wiring** in:
+
+**[`docs/UI_COMPONENTS.md`](./UI_COMPONENTS.md)**
+
+**Product shell:** GPTZero-inspired analyzer workspace — brand header (`PhishSignal`), one Container Scroll detector canvas, calm secondary cards, Morphing Dialog for metric details. Motion policy and source URLs live in that doc.
+
+**Frontend analysis + API wiring plan (Python unchanged):**
+
+- [`docs/FRONTEND_ANALYSIS.md`](./FRONTEND_ANALYSIS.md)
+- [`docs/BACKEND_INTEGRATION.md`](./BACKEND_INTEGRATION.md)
+- [`docs/AUTH_AND_STORAGE.md`](./AUTH_AND_STORAGE.md) — history + login decisions
+
+---
+
+## 7. Decision log (recommended defaults for the larger project)
 
 | Decision | Choice | Why |
 |---|---|---|

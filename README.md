@@ -30,7 +30,29 @@ The score should be treated as a **risk indicator to prompt closer inspection**:
 **NOTE**: Please keep in mind that an uncertain range between 40-59 indicates that the model is not confident in its scoring and may be ambivalent regarding the URL composition and/or domain history. 
 
 ## Crowdsourcing
-Once the website is implemented, users will be able to flag results that seem incorrect. For example, a legitimate site scored as phishing, or a phishing site scored as safe. Reported URLs will help identify gaps in the model's training data and guide future improvements.
+Planned: users will flag incorrect results (false positives/negatives) to improve future training. Not shipped in the MVP UI.
 
-## Hosting
-As of now, a website is in the works of implementation. Any further updates will be issued and announced here.
+## App (`web/`)
+
+Next.js analyzer UI lives in [`web/`](web/). Local run:
+
+```bash
+# API (repo root) — loads model.pkl; set TRAIN_MODEL=1 only to retrain
+.\.venv\Scripts\uvicorn.exe api:app --host 127.0.0.1 --port 8000
+
+# Web
+cd web
+cp .env.example .env.local
+npm run dev
+```
+
+## Docs
+
+| Doc | Path |
+|---|---|
+| PRD | [`docs/PRD.md`](docs/PRD.md) |
+| Tech stack | [`docs/TECH_STACK.md`](docs/TECH_STACK.md) |
+| Backend integration | [`docs/BACKEND_INTEGRATION.md`](docs/BACKEND_INTEGRATION.md) |
+| Frontend analysis | [`docs/FRONTEND_ANALYSIS.md`](docs/FRONTEND_ANALYSIS.md) |
+| Flows | [`docs/FLOWS.md`](docs/FLOWS.md) |
+| UI sources | [`docs/UI_COMPONENTS.md`](docs/UI_COMPONENTS.md) |

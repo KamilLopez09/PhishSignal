@@ -1,0 +1,270 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root,
+  .dark {
+    --ps-bg: #a29144;
+    --ps-card: #2a1518;
+    --ps-mint: #801929;
+    --ps-danger: #801929;
+    --ps-white: #ffffff;
+    --ps-ink: #1a1210;
+
+    --background: var(--ps-bg);
+    --foreground: var(--ps-ink);
+    --card: var(--ps-card);
+    --card-foreground: var(--ps-white);
+    --popover: var(--ps-card);
+    --popover-foreground: var(--ps-white);
+    --primary: var(--ps-mint);
+    --primary-foreground: var(--ps-white);
+    --secondary: #8a7a3a;
+    --secondary-foreground: var(--ps-ink);
+    --muted: #8a7a3a;
+    --muted-foreground: #3d3420;
+    --accent: var(--ps-mint);
+    --accent-foreground: var(--ps-white);
+    --destructive: var(--ps-danger);
+    --border: #6e5f2e;
+    --input: #6e5f2e;
+    --ring: var(--ps-mint);
+    --radius: 0.75rem;
+
+    /* GodUI Hold Confirm Button scale tokens */
+    --button-py-sm: 0.5rem;
+    --button-px-sm: 1rem;
+    --button-text-sm: 0.875rem;
+    --button-leading-sm: 1.25rem;
+    --button-radius-sm: calc(var(--radius) - 2px);
+    --button-py-md: 0.75rem;
+    --button-px-md: 1.5rem;
+    --button-text-md: 0.875rem;
+    --button-leading-md: 1.25rem;
+    --button-radius-md: var(--radius);
+    --button-py-lg: 1rem;
+    --button-px-lg: 2rem;
+    --button-text-lg: 1rem;
+    --button-leading-lg: 1.5rem;
+    --button-radius-lg: calc(var(--radius) + 4px);
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  }
+}
+
+/* Uiverse: https://uiverse.io/arthur_6104/grumpy-pug-86 — Inspect mini browser
+   See docs/UI_COMPONENTS.md */
+@layer components {
+  .ps-browser {
+    width: min(100%, 420px);
+    height: 250px;
+    background: #d8d8d8;
+    border-radius: 7px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 5px 5px 10px rgba(31, 31, 31, 0.245);
+  }
+
+  .ps-browser .tabs-head {
+    background-color: #353535;
+    height: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    padding-left: 20px;
+  }
+
+  .ps-browser .tabs-head .tab-open {
+    width: 110px;
+    height: 34px;
+    border-radius: 7px 7px 0 0;
+    background-color: #515151;
+    display: flex;
+    gap: 5px;
+    align-items: start;
+    justify-content: space-between;
+    padding: 4px 8px;
+    position: relative;
+  }
+
+  .ps-browser .tabs-head .tab-open .close-tab {
+    color: #fff;
+    font-size: 9px;
+    padding: 1px 4px;
+    border-radius: 50%;
+    cursor: default;
+  }
+
+  .ps-browser .tabs-head .tab-open .close-tab:hover {
+    background-color: #5d5d5d;
+  }
+
+  .ps-browser .tabs-head .tab-open .rounded-l {
+    position: absolute;
+    background-color: #515151;
+    width: 20px;
+    height: 24px;
+    top: 0;
+    right: 0;
+    transform: translate(100%);
+    overflow: hidden;
+  }
+
+  .ps-browser .tabs-head .tab-open .rounded-l .mask-round {
+    width: 100%;
+    height: 100%;
+    background-color: #353535;
+    border-radius: 0 0 0 7px;
+  }
+
+  .ps-browser .tabs-head .tab-open .rounded-r {
+    position: absolute;
+    background-color: #515151;
+    width: 20px;
+    height: 24px;
+    top: 0;
+    left: 0;
+    transform: translate(-100%);
+    overflow: hidden;
+  }
+
+  .ps-browser .tabs-head .tab-open .rounded-r .mask-round {
+    width: 100%;
+    height: 100%;
+    background-color: #353535;
+    border-radius: 0 0 7px 0;
+  }
+
+  .ps-browser .tabs-head .tab-open span {
+    color: #fff;
+    font-size: 10px;
+  }
+
+  .ps-browser .tabs-head .window-opt {
+    display: flex;
+  }
+
+  .ps-browser .tabs-head .window-opt button {
+    height: 30px;
+    width: 30px;
+    border: none;
+    background-color: transparent;
+    transition: 0.1s ease-out;
+    color: #fff;
+    margin-bottom: 10px;
+    cursor: default;
+  }
+
+  .ps-browser .tabs-head .window-opt button:hover {
+    background-color: #515151c8;
+  }
+
+  .ps-browser .tabs-head .window-opt .window-close:hover {
+    background-color: rgb(255, 52, 52);
+  }
+
+  .ps-browser .head-browser {
+    position: absolute;
+    top: 30px;
+    width: 100%;
+    height: 40px;
+    background-color: #515151;
+    padding: 7px;
+    display: flex;
+    align-items: center;
+    border-radius: 7px 7px 0 0;
+    gap: 5px;
+  }
+
+  .ps-browser .head-browser input {
+    background-color: #3b3b3b;
+    border: 2px solid transparent;
+    height: 100%;
+    border-radius: 20px;
+    outline: none;
+    color: #fff;
+    padding: 0 28px 0 15px;
+    flex: 1;
+    min-width: 0;
+    transition: 0.2s ease-in-out;
+    font-size: 12px;
+    font-family: inherit;
+  }
+
+  .ps-browser .head-browser input:hover {
+    background-color: #5d5d5d;
+  }
+
+  .ps-browser .head-browser input:focus {
+    border-color: #801929;
+    background-color: #3b3b3b;
+    transition: none;
+  }
+
+  .ps-browser .head-browser input::placeholder {
+    color: #ffffffaa;
+  }
+
+  .ps-browser .head-browser button {
+    width: 27px;
+    height: 25px;
+    border: none;
+    background-color: transparent;
+    color: #fff;
+    border-radius: 50%;
+    transition: 0.2s ease-in-out;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .ps-browser .head-browser button:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  .ps-browser .head-browser button:hover {
+    background-color: #5d5d5d;
+  }
+
+  .ps-browser .head-browser button:disabled:hover {
+    background-color: transparent;
+  }
+
+  .ps-browser .head-browser .star {
+    color: #fff;
+    position: absolute;
+    right: 45px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 15px;
+    opacity: 0.7;
+    height: 18px;
+    width: 19px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 3px;
+  }
+
+  .ps-browser .browser-hint {
+    margin-top: auto;
+    padding: 1.25rem 1rem 1rem;
+    text-align: center;
+    font-size: 12px;
+    color: #30313a;
+    font-weight: 500;
+  }
+}

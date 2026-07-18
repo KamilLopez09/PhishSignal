@@ -71,7 +71,7 @@ Primary components already in the repo (`master` branch):
 | HTTP API | `api.py` | FastAPI app: `GET /analyze`, `GET /health`, open CORS |
 | ML pipeline + inference | `model.py` | Train RandomForest, extract features, `analyze(url)` |
 | Artifacts | `model.pkl`, `apidataset.csv` | Serialized model/scaler/features; ~11.4k labeled URLs |
-| Product copy | `README.md` | Score bands, crowdsourcing intent, hosting note |
+| Product copy | `README.md` | Score bands, crowdsourcing intent |
 
 **Important branch note:** `origin/main` currently contains only a deleted README (empty tree). **All product code lives on `master`.** Product work should treat `master` as the source of truth until branches are reconciled.
 
@@ -87,7 +87,7 @@ Primary components already in the repo (`master` branch):
 | FR-2 | Extract URL-structural features only (no page crawl) | P0 | `extractFeatures()` |
 | FR-3 | Enrich with domain age via RDAP when available | P0 | `getDomainAge()` → rdap.org |
 | FR-4 | Return human-readable signal strings | P0 | Appended during feature extraction |
-| FR-5 | Health check for hosting platforms | P0 | `GET /health` → `{ status: "ok" }` |
+| FR-5 | Health check endpoint | P0 | `GET /health` → `{ status: "ok" }` |
 
 ### 6.2 Website (planned)
 
@@ -98,6 +98,10 @@ Primary components already in the repo (`master` branch):
 | FR-8 | Clear disclaimer: score ≠ content scan | P0 | Trust / liability |
 | FR-9 | Mobile-responsive layout | P1 | |
 | FR-10 | Rate-limit friendly UX (disable spam submits) | P1 | Client + API |
+| FR-7a | Brand header shows **PhishSignal** as primary chrome | P0 | GPTZero-style product shell |
+| FR-7b | One primary detector canvas; secondary panels stay calm | P1 | Avoid per-card marketing scroll heroes |
+
+**UI direction (`web/`):** Inspired by GPTZero’s detector hierarchy (brand → paste/scan canvas → results → details on demand), implemented with PhishSignal tokens. Motion inventory and third-party URLs: [`docs/UI_COMPONENTS.md`](./UI_COMPONENTS.md).
 
 ### 6.3 Crowdsourcing (planned — README only today)
 
@@ -113,10 +117,10 @@ Primary components already in the repo (`master` branch):
 | ID | Requirement | Priority | Notes |
 |---|---|---|---|
 | FR-15 | Publish OpenAPI (FastAPI auto-docs) | P1 | `/docs` |
-| FR-16 | Separate train script from inference import path | P0 | Today `model.py` trains on import |
-| FR-17 | Input validation / URL normalization | P1 | scheme, length, encoding |
-| FR-18 | Structured error responses | P1 | 400/422/503 |
-| FR-19 | Tighten CORS for production origins | P1 | Dev currently `*` |
+| FR-16 | Separate train script from inference import path | P0 | **Done** — boot loads `model.pkl`; `TRAIN_MODEL=1` to retrain |
+| FR-17 | Input validation / URL normalization | P1 | **Done** — API + `web/src/lib/url-input.ts` |
+| FR-18 | Structured error responses | P1 | 400/429 via FastAPI `HTTPException` |
+| FR-19 | Tighten CORS for production origins | P1 | **Done** — `CORS_ORIGINS` env (empty = `*` local) |
 | FR-20 | Optional API key / quota for public abuse control | P2 | |
 
 ---
@@ -157,7 +161,7 @@ Score semantics: **P(phishing | features)** × 100 from `RandomForestClassifier.
 
 1. User flags result  
 2. Team reviews → labels confirmed  
-3. Sample enters dataset → retrain → redeploy `model.pkl`
+3. Sample enters dataset → retrain → publish updated `model.pkl`
 
 ---
 
@@ -167,7 +171,7 @@ Score semantics: **P(phishing | features)** × 100 from `RandomForestClassifier.
 |---|---|
 | Privacy | Do not fetch destination page content; log URLs only as needed for abuse/ops with retention policy |
 | Latency | Feature extract local; RDAP bounded (~3s thread join) |
-| Availability | `/health` for Railway (or equivalent) probes |
+| Availability | `/health` for process probes |
 | Security | Validate inputs; no SSRF to arbitrary page content; lock down CORS; secrets out of repo |
 | Observability | Request logs, error rates, RDAP timeout rates, score distribution |
 | Reproducibility | Fixed `random_state=42`; version model artifact + feature list |
@@ -202,7 +206,7 @@ Excluded from live inference (present in dataset but not extractable without cra
 ### Phase 1 — Public site MVP
 
 - Analyzer UI + landing + disclaimer  
-- Deploy API + static/SSR frontend  
+- Serve API + static/SSR frontend together locally (and later wherever the team runs them)  
 - Basic rate limiting  
 
 ### Phase 2 — Crowdsourcing loop
@@ -222,7 +226,7 @@ Excluded from live inference (present in dataset but not extractable without cra
 
 | Risk / question | Impact | Mitigation |
 |---|---|---|
-| Retrain-on-import in `model.py` | Slow deploys, non-deterministic boot, heavy CPU | Load pickle only in API path |
+| Retrain-on-import in `model.py` | Slow boot, non-deterministic startup, heavy CPU | Load pickle only in API path |
 | RDAP failures → `domain_age = -1` | Inflates suspicion signals | Cache, fallbacks, softer messaging |
 | Structural-only model | Misses lookalike pages on aged domains | Product copy honesty + future content signals as optional module |
 | Open CORS + unauthenticated API | Abuse / cost | Origin allowlist + rate limits |
@@ -235,7 +239,7 @@ Excluded from live inference (present in dataset but not extractable without cra
 
 - [ ] User can analyze a URL and see score, band, and ≥1 signal string  
 - [ ] Disclaimer states no page-content scanning  
-- [ ] `/health` returns 200 in deployed environment  
+- [ ] `/health` returns 200 when the API is running  
 - [ ] Inference path does not retrain the forest on startup  
 - [ ] Score bands match the table in §7  
 - [ ] Report-incorrect control exists (can be “collect only” stub)  
@@ -244,9 +248,8 @@ Excluded from live inference (present in dataset but not extractable without cra
 
 ## 14. Out-of-repo dependencies (planned product)
 
-Not in the current repository but required for the larger site:
+Partially in-repo; still needed for the larger product:
 
-- Frontend app (framework TBD — see `TECH_STACK.md`)  
-- Managed hosting (README mentions Railway for API health)  
+- Frontend app — **shipped** as `web/` (Next.js); Settings/History routes TBD  
 - Persistence for crowdsourcing (DB)  
 - Optional CDN / analytics (privacy-preserving)

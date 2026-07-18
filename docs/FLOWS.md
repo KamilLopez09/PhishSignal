@@ -174,14 +174,14 @@ sequenceDiagram
 
 ---
 
-## 7. Health / deploy probe
+## 7. Health probe
 
 ```mermaid
 flowchart LR
-  H[Host platform Railway etc.] -->|GET /health| A[FastAPI]
+  H[Probe client] -->|GET /health| A[FastAPI]
   A --> R["{ status: ok }"]
   R --> H
-  H -->|healthy| T[Keep instance]
+  H -->|healthy| T[Process ok]
   H -->|fail| R2[Restart / alert]
 ```
 
@@ -195,6 +195,6 @@ flowchart LR
 | Feature extract + analyze | `model.py` | Yes |
 | Trained artifact | `model.pkl` | Yes |
 | Dataset | `apidataset.csv` | Yes |
-| Website UI | *(not in repo)* | No — planned |
+| Website UI | `web/` | Yes — Next.js analyzer |
 | Reports API + DB | *(not in repo)* | No — planned |
-| Offline train entrypoint | *(should split from `model.py`)* | Partial — coupled |
+| Offline train | `TRAIN_MODEL=1` / `train_and_save()` | Yes — optional; serve uses `model.pkl` |

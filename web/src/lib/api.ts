@@ -1,0 +1,94 @@
+/**
+ * Browser client for the PhishSignal FastAPI service.
+ * Set `NEXT_PUBLIC_API_BASE_URL` (e.g. http://localhost:8000 or /backend).
+ *
+ * @see docs/BACKEND_INTEGRATION.md
+ */
+import type { AnalyzeResponse } from "@/lib/types";
+import { serializeUrlInput } from "@/lib/url-input";
+
+const ANALYZE_TIMEOUT_MS = 15_000;
+const HEALTH_TIMEOUT_MS = 4_000;
+
+export function getApiBaseUrl(): string | null {
+  const raw = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
+  if (!raw) return null;
+  return raw.replace(/\/$/, "");
+}
+
+export function isLiveApiConfigured(): boolean {
+  return getApiBaseUrl() != null;
+}
+
+async function fetchJson(url: string, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      signal: controller.signal,
+    });
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") {
+      throw new Error(`Request timed out after ${timeoutMs / 1000}s`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * `GET /analyze?url=` — FastAPI contract.
+ * Prefer passing already-serialized URLs from Dashboard; re-validates here.
+ */
+export async function analyzeUrl(url: string): Promise<AnalyzeResponse> {
+  const base = getApiBaseUrl();
+  if (!base) {
+    throw new Error("NEXT_PUBLIC_API_BASE_URL is not set");
+  }
+
+  const serialized = serializeUrlInput(url);
+  if (!serialized.ok) {
+    throw new Error(serialized.reason);
+  }
+
+  const endpoint = `${base}/analyze?url=${encodeURIComponent(serialized.url)}`;
+  const res = await fetchJson(endpoint, ANALYZE_TIMEOUT_MS);
+
+  if (res.status === 429) {
+    throw new Error("Rate limited by API — try again shortly");
+  }
+  if (!res.ok) {
+    throw new Error(`Analyze failed (${res.status})`);
+  }
+
+  const data = (await res.json()) as Partial<AnalyzeResponse>;
+  if (
+    typeof data.url !== "string" ||
+    typeof data.score !== "number" ||
+    !Array.isArray(data.signals)
+  ) {
+    throw new Error("Analyze response missing url, score, or signals");
+  }
+
+  return {
+    url: data.url,
+    score: data.score,
+    signals: data.signals.map(String),
+  };
+}
+
+export async function checkHealth(): Promise<boolean> {
+  const base = getApiBaseUrl();
+  if (!base) return false;
+  try {
+    const res = await fetchJson(`${base}/health`, HEALTH_TIMEOUT_MS);
+    if (!res.ok) return false;
+    const body = (await res.json()) as { status?: string };
+    return body.status === "ok";
+  } catch {
+    return false;
+  }
+}

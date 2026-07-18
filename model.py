@@ -1,226 +1,192 @@
-''' Import libraries '''
+"""PhishSignal ML: load model.pkl for serve; optional train; URL feature extract + analyze()."""
 
-# Import pandas: This is used to load and organize the dataset
-import pandas as pd
+from __future__ import annotations
 
-# Import numpy: This is used to perform mathematical operations on arrays
-import numpy as np
-
-# Import re: This is used to extract patterns from URLs
+import datetime
+import os
+import pickle
 import re
+import threading
+from pathlib import Path
 
-# Import scikit-learn: This is used to train and evaluate the model
+import pandas as pd
+import requests
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import accuracy_score
-from sklearn.ensemble import RandomForestClassifier
 
-# Import pickle: This is used to save and load the trained model
-import pickle
+MODEL_PATH = Path(os.getenv("MODEL_PATH", "model.pkl"))
+DATASET_PATH = Path(os.getenv("DATASET_PATH", "apidataset.csv"))
+FORCE_TRAIN = os.getenv("TRAIN_MODEL", "").strip().lower() in ("1", "true", "yes")
 
-# Import whois and datetime: These are used to get domain registration info
-import whois
-import datetime
-import logging
-import threading
-import requests
-
-# Suppress whois error messages
-logging.getLogger("whois").setLevel(logging.CRITICAL)
-
-
-''' Load Dataset '''
-
-# Load the dataset from the CSV file
-df = pd.read_csv("apidataset.csv")
-
-# Print the shape of the dataset
-print(f"Dataset loaded: {df.shape[0]} rows, {df.shape[1]} columns")
-
-
-''' Feature Selection '''
-
-# Convert status to binary (0 is legit and 1 is phishing)
-df['status'] = df['status'].map({'phishing': 1, 'legitimate': 0})
-
-'''Only consider features that extractFeatures() can actually compute
-from a URL alone: excludes google_index, page_rank, and other
-page-content features that would require live web scraping.'''
 REALFEATURES = [
-    "length_url", "length_hostname", "ip", "nb_dots", "nb_hyphens", "nb_at", "nb_qm",
-    "nb_and", "nb_eq", "nb_slash", "nb_semicolumn", "nb_www", "nb_com", "https_token",
-    "ratio_digits_url", "ratio_digits_host", "nb_subdomains", "tld_in_subdomain",
-    "abnormal_subdomain", "prefix_suffix", "shortening_service", "length_words_raw",
-    "shortest_word_host", "longest_words_raw", "longest_word_host", "longest_word_path",
-    "avg_words_raw", "avg_word_host", "avg_word_path", "phish_hints", "suspecious_tld",
-    "domain_age", "dns_record"
+    "length_url",
+    "length_hostname",
+    "ip",
+    "nb_dots",
+    "nb_hyphens",
+    "nb_at",
+    "nb_qm",
+    "nb_and",
+    "nb_eq",
+    "nb_slash",
+    "nb_semicolumn",
+    "nb_www",
+    "nb_com",
+    "https_token",
+    "ratio_digits_url",
+    "ratio_digits_host",
+    "nb_subdomains",
+    "tld_in_subdomain",
+    "abnormal_subdomain",
+    "prefix_suffix",
+    "shortening_service",
+    "length_words_raw",
+    "shortest_word_host",
+    "longest_words_raw",
+    "longest_word_host",
+    "longest_word_path",
+    "avg_words_raw",
+    "avg_word_host",
+    "avg_word_path",
+    "phish_hints",
+    "suspecious_tld",
+    "domain_age",
+    "dns_record",
 ]
 
-numericalDf = df[REALFEATURES + ['status']]
 
-'''
-Compute the correlation matrix.
-This measures how strongly each feature relates to the label (phishing or not).
-A score close to 1 or -1 means that feature is a strong predictor of phishing.
-A score close to 0 means that feature is basically useless for detection.
-Mahdi and Rayyan prolly remember this from Lin or Michel's class lol
-btw thanks to a bunch of linear algebra courses or videos online for this I never
-expected a crossover of linear algebra and prob & stats lmao
-'''
-corrMatrix = numericalDf.corr()['status']
+def train_and_save(dataset_path: Path = DATASET_PATH, out_path: Path = MODEL_PATH) -> dict:
+    """Train RandomForest from CSV and write model.pkl. Used when pickle is missing or TRAIN_MODEL=1."""
+    df = pd.read_csv(dataset_path)
+    print(f"Dataset loaded: {df.shape[0]} rows, {df.shape[1]} columns")
 
-# featureSelector: This function keeps only the features that are strongly
-# correlated with the label, anything above the threshold gets included
-def featureSelector(cmatrix, threshold):
-    selectedFeatures = []
-    for feature, score in cmatrix.items():
-        if abs(score) > threshold and feature != 'status':
-            selectedFeatures.append(feature)
-    return selectedFeatures
+    df["status"] = df["status"].map({"phishing": 1, "legitimate": 0})
+    numerical = df[REALFEATURES + ["status"]]
+    corr = numerical.corr()["status"]
+    selected = [
+        feature
+        for feature, score in corr.items()
+        if feature != "status" and abs(score) > 0.1
+    ]
+    print(f"Selected {len(selected)} features")
 
-# Use 0.1 as the threshold meaning any feature correlated above 10% gets included
-selectedFeatures = featureSelector(corrMatrix, 0.1)
-print(f"Selected {len(selectedFeatures)} features")
+    x_train, x_test, y_train, y_test = train_test_split(
+        df[selected],
+        df["status"],
+        test_size=0.25,
+        random_state=42,
+    )
+    scaler = StandardScaler()
+    x_train_scaled = scaler.fit_transform(x_train)
+    x_test_scaled = scaler.transform(x_test)
 
+    print("Training Random Forest...")
+    clf = RandomForestClassifier(
+        n_estimators=200,
+        max_depth=None,
+        random_state=42,
+        n_jobs=-1,
+    )
+    clf.fit(x_train_scaled, y_train)
+    accuracy = accuracy_score(y_test, clf.predict(x_test_scaled))
+    print(f"Done! Accuracy: {round(accuracy * 100, 2)}%")
 
-''' Prepare Data '''
-
-# Separate features (inputs) and labels (what we are predicting)
-X = df[selectedFeatures]
-y = df['status']
-
-'''
-Split into training and testing sets.
-The model learns from the training set and gets evaluated on the test set.
-This way we can measure how well it performs on data it has never seen before.
-'''
-xTrain, xTest, yTrain, yTest = train_test_split(X, y, test_size=0.25, random_state=42)
-
-'''
-StandardScaler normalizes all features to the same numeric range.
-This prevents features with large numbers from dominating the model.
-For example, URL length (100+) would otherwise overpower a binary flag (0 or 1).
-Think of it like converting miles and kilometers to the same unit before comparing.
-'''
-scaler = StandardScaler()
-xTrainScaled = scaler.fit_transform(xTrain)
-xTestScaled = scaler.transform(xTest)
-
-print(f"Training samples: {len(xTrain)} | Testing samples: {len(xTest)}")
+    payload = {"model": clf, "scaler": scaler, "features": selected}
+    with open(out_path, "wb") as f:
+        pickle.dump(payload, f)
+    print(f"Model saved as {out_path}")
+    return payload
 
 
-''' Train Model '''
-
-'''
-Random Forest works by building many decision trees and having them vote
-on whether a URL is phishing or not. The majority vote wins.
-n_estimators is the number of trees, more trees means more accurate but slower.
-n_jobs=-1 tells it to use all available CPU cores to speed up training.
-random_state=42 makes the results reproducible every time we run it.
-'''
-print("\nTraining Random Forest...")
-model = RandomForestClassifier(n_estimators=200, max_depth=None, random_state=42, n_jobs=-1)
-model.fit(xTrainScaled, yTrain)
-
-# Run predictions on the test set to measure real world accuracy
-yPred = model.predict(xTestScaled)
-accuracy = accuracy_score(yTest, yPred)
-print(f"Done! Accuracy: {round(accuracy * 100, 2)}%")
+def load_model(path: Path = MODEL_PATH) -> dict:
+    with open(path, "rb") as f:
+        return pickle.load(f)
 
 
-''' Save Model '''
+if FORCE_TRAIN or not MODEL_PATH.exists():
+    if not MODEL_PATH.exists():
+        print(f"{MODEL_PATH} missing — training once before serve")
+    saved = train_and_save()
+else:
+    print(f"Loading {MODEL_PATH} (set TRAIN_MODEL=1 to retrain)")
+    saved = load_model()
 
-# Save the model, scaler, and selected features to disk so the API can load them
-pickle.dump({"model": model, "scaler": scaler, "features": selectedFeatures}, open("model.pkl", "wb"))
-print("Model saved as model.pkl")
-
-
-''' Feature Extraction '''
-
-# Load the saved model back from disk
-saved = pickle.load(open("model.pkl", "rb"))
 model = saved["model"]
 scaler = saved["scaler"]
 selectedFeatures = saved["features"]
 
-# Cache for domain age lookups so we never look up the same domain twice
-domainCache = {}
+# In-process RDAP age cache (domain → days)
+domainCache: dict[str, int] = {}
 
-def getDomainAge(cleanDomain):
+
+def getDomainAge(cleanDomain: str) -> int:
     if cleanDomain in domainCache:
         return domainCache[cleanDomain]
 
     result = {"age": -1}
 
-    def doRdap():
+    def do_rdap() -> None:
         try:
             resp = requests.get(f"https://rdap.org/domain/{cleanDomain}", timeout=3)
             if resp.status_code != 200:
                 return
-
             data = resp.json()
-            creationDate = None
+            creation_date = None
             for event in data.get("events", []):
                 if event.get("eventAction") == "registration":
-                    creationDate = event.get("eventDate")
+                    creation_date = event.get("eventDate")
                     break
-
-            if creationDate:
-                parsed = datetime.datetime.fromisoformat(creationDate.replace("Z", "+00:00"))
+            if creation_date:
+                parsed = datetime.datetime.fromisoformat(
+                    creation_date.replace("Z", "+00:00")
+                )
                 now = datetime.datetime.now(datetime.timezone.utc)
                 result["age"] = (now - parsed).days
         except Exception:
             pass
 
-    t = threading.Thread(target=doRdap)
-    t.start()
-    t.join(timeout=3)
+    thread = threading.Thread(target=do_rdap)
+    thread.start()
+    thread.join(timeout=3)
 
     if result["age"] > 0:
         domainCache[cleanDomain] = result["age"]
-
     return result["age"]
 
 
-# extractFeatures: This function extracts all measurable signals from a raw URL
-def extractFeatures(url):
-    features = {}
-    signals = []
+def extractFeatures(url: str):
+    """Extract URL-structure features + human-readable signals (no page crawl)."""
+    features: dict = {}
+    signals: list[str] = []
 
-    # Extract the hostname from the URL (e.g. "paypal.com" from "https://paypal.com/login")
     try:
         hostname = url.split("//")[1].split("/")[0]
-    except:
+    except Exception:
         hostname = ""
 
-    # Extract the path from the URL (e.g. "/login/verify" from "https://paypal.com/login/verify")
     try:
-        path = url.split("//")[1].split("/", 1)[1] if "/" in url.split("//")[1] else ""
-    except:
+        path = (
+            url.split("//")[1].split("/", 1)[1]
+            if "/" in url.split("//")[1]
+            else ""
+        )
+    except Exception:
         path = ""
 
-    # Split the URL into individual words for length analysis
-    wordsRaw = [w for w in re.split(r"[\W_]+", url) if w]
-    wordsHost = [w for w in re.split(r"[\W_]+", hostname) if w]
-    wordsPath = [w for w in re.split(r"[\W_]+", path) if w]
+    words_raw = [w for w in re.split(r"[\W_]+", url) if w]
+    words_host = [w for w in re.split(r"[\W_]+", hostname) if w]
+    words_path = [w for w in re.split(r"[\W_]+", path) if w]
 
-
-    ''' URL Structure Features '''
-
-    # Length of the full URL, phishing URLs tend to be very long
     features["length_url"] = len(url)
-
-    # Length of the hostname
     features["length_hostname"] = len(hostname)
 
-    # Check if the hostname is a raw IP address like 192.168.1.1
-    # Legitimate websites always use domain names, never raw IPs (think its pretty obvious)
-    hasIP = bool(re.match(r"^\d+\.\d+\.\d+\.\d+$", hostname))
-    features["ip"] = int(hasIP)
-    if hasIP:
+    has_ip = bool(re.match(r"^\d+\.\d+\.\d+\.\d+$", hostname))
+    features["ip"] = int(has_ip)
+    if has_ip:
         signals.append("Domain is a raw IP address, legitimate websites never do this")
 
-    # Count special characters that are common in phishing URLs
     features["nb_dots"] = url.count(".")
     features["nb_hyphens"] = url.count("-")
     features["nb_at"] = url.count("@")
@@ -235,137 +201,102 @@ def extractFeatures(url):
     features["nb_www"] = 1 if "www." in url else 0
     features["nb_com"] = 1 if ".com" in url else 0
 
-    # Check if the URL uses HTTPS (encrypted) or plain HTTP (unencrypted)
-    usesHTTPS = url.startswith("https")
-    features["https_token"] = int(usesHTTPS)
-    if not usesHTTPS:
+    uses_https = url.startswith("https")
+    features["https_token"] = int(uses_https)
+    if not uses_https:
         signals.append("Uses unencrypted HTTP with no SSL protection")
 
-    '''
-    Ratio of digits in the URL and hostname.
-    A high ratio of digits often indicates a very oddd domain
-    We divide the digit count by the total length to get a value between 0 and 1. (again correlation)
-    '''
-    features["ratio_digits_url"] = round(sum(c.isdigit() for c in url) / max(len(url), 1), 4)
-    features["ratio_digits_host"] = round(sum(c.isdigit() for c in hostname) / max(len(hostname), 1), 4)
+    features["ratio_digits_url"] = round(
+        sum(c.isdigit() for c in url) / max(len(url), 1), 4
+    )
+    features["ratio_digits_host"] = round(
+        sum(c.isdigit() for c in hostname) / max(len(hostname), 1), 4
+    )
 
-
-    ''' Subdomain Features '''
-
-    # Count how many subdomains the URL has
-    # Phishing sites often use many subdomains to look legitimate
-    # e.g. "login.secure.paypal.evil.com" has 3 subdomains
     parts = hostname.split(".")
     features["nb_subdomains"] = max(len(parts) - 2, 0)
     features["tld_in_subdomain"] = 1 if len(parts) > 2 else 0
-    features["abnormal_subdomain"] = 1 if re.search(r"^(w[0-9]|www[0-9])", hostname) else 0
+    features["abnormal_subdomain"] = (
+        1 if re.search(r"^(w[0-9]|www[0-9])", hostname) else 0
+    )
 
-    # Check if the hostname has a hyphen, common in fake domains like "paypal-secure.com" <-- this is something mufassi would make boii
-    hasDash = "-" in hostname
-    features["prefix_suffix"] = int(hasDash)
-    if hasDash:
-        signals.append("Hostname contains hyphens, common in fake domains like paypal-secure.com")
+    has_dash = "-" in hostname
+    features["prefix_suffix"] = int(has_dash)
+    if has_dash:
+        signals.append(
+            "Hostname contains hyphens, common in fake domains like paypal-secure.com"
+        )
 
-    # Check if the URL uses a shortening service that hides the real destination
-    isShortened = bool(re.search(r"bit\.ly|tinyurl|goo\.gl|t\.co|ow\.ly", url))
-    features["shortening_service"] = int(isShortened)
-    if isShortened:
+    is_shortened = bool(re.search(r"bit\.ly|tinyurl|goo\.gl|t\.co|ow\.ly", url))
+    features["shortening_service"] = int(is_shortened)
+    if is_shortened:
         signals.append("Uses a URL shortener, the real destination is hidden")
 
+    features["length_words_raw"] = len(words_raw)
+    features["shortest_word_host"] = min((len(w) for w in words_host), default=0)
+    features["longest_words_raw"] = max((len(w) for w in words_raw), default=0)
+    features["longest_word_host"] = max((len(w) for w in words_host), default=0)
+    features["longest_word_path"] = max((len(w) for w in words_path), default=0)
+    features["avg_words_raw"] = round(
+        sum(len(w) for w in words_raw) / max(len(words_raw), 1), 4
+    )
+    features["avg_word_host"] = round(
+        sum(len(w) for w in words_host) / max(len(words_host), 1), 4
+    )
+    features["avg_word_path"] = round(
+        sum(len(w) for w in words_path) / max(len(words_path), 1), 4
+    )
 
-    ''' Word Length Features '''
-
-    '''
-    These features measure the length and structure of words in the URL.
-    Phishing URLs often have very long or random-looking words in the hostname
-    because they try to include a legitimate brand name alongside a fake domain.
-    For example "paypal-secure-login-verify.xyz" is very long compared to "paypal.com".
-    '''
-    features["length_words_raw"] = len(wordsRaw)
-    features["shortest_word_host"] = min((len(w) for w in wordsHost), default=0)
-    features["longest_words_raw"] = max((len(w) for w in wordsRaw), default=0)
-    features["longest_word_host"] = max((len(w) for w in wordsHost), default=0)
-    features["longest_word_path"] = max((len(w) for w in wordsPath), default=0)
-    features["avg_words_raw"] = round(sum(len(w) for w in wordsRaw) / max(len(wordsRaw), 1), 4)
-    features["avg_word_host"] = round(sum(len(w) for w in wordsHost) / max(len(wordsHost), 1), 4)
-    features["avg_word_path"] = round(sum(len(w) for w in wordsPath) / max(len(wordsPath), 1), 4)
-
-
-    ''' Phishing Keyword Features '''
-
-    # Check if the URL contains common phishing keywords in the path
-    hasPhishHints = bool(re.search(r"login|verify|secure|account|update|confirm|banking|payment", url.lower()))
-    features["phish_hints"] = int(hasPhishHints)
-    if hasPhishHints:
+    has_phish_hints = bool(
+        re.search(
+            r"login|verify|secure|account|update|confirm|banking|payment",
+            url.lower(),
+        )
+    )
+    features["phish_hints"] = int(has_phish_hints)
+    if has_phish_hints:
         signals.append("URL contains phishing keywords like login, verify, or secure")
 
-    # Check if the URL uses a suspicious top-level domain
-    hasSuspiciousTLD = bool(re.search(r"\.xyz|\.top|\.club|\.online|\.site|\.ru|\.cn", url.lower()))
-    features["suspecious_tld"] = int(hasSuspiciousTLD)
-    if hasSuspiciousTLD:
+    has_suspicious_tld = bool(
+        re.search(r"\.xyz|\.top|\.club|\.online|\.site|\.ru|\.cn", url.lower())
+    )
+    features["suspecious_tld"] = int(has_suspicious_tld)
+    if has_suspicious_tld:
         signals.append("Uses a suspicious top-level domain like .xyz, .top, or .ru")
 
+    clean_domain = hostname.replace("www.", "")
+    domain_age = getDomainAge(clean_domain)
+    features["domain_age"] = domain_age
+    features["dns_record"] = 1 if domain_age > 0 else 0
 
-    ''' Domain Age via WHOIS '''
-
-    # Look up when the domain was registered
-    # Phishing sites are almost always brand new, legitimate sites are usually years old
-    cleanDomain = hostname.replace("www.", "")
-    domainAge = getDomainAge(cleanDomain)
-    features["domain_age"] = domainAge
-    # Please note that if the domain has no WHOIS record, we set domainAge to -1 and flag it as suspicious.
-    # We tried our best to debug this but oh well :/
-    features["dns_record"] = 1 if domainAge > 0 else 0
-
-    if domainAge == -1:
-        signals.append("Domain has no WHOIS record, it may not exist or was just created")
-    elif domainAge < 30:
-        signals.append(f"Domain is only {domainAge} days old, phishing sites are almost always newly registered")
-    elif domainAge < 180:
-        signals.append(f"Domain is relatively new at {domainAge} days old")
+    if domain_age == -1:
+        signals.append(
+            "Domain has no WHOIS record, it may not exist or was just created"
+        )
+    elif domain_age < 30:
+        signals.append(
+            f"Domain is only {domain_age} days old, phishing sites are almost always newly registered"
+        )
+    elif domain_age < 180:
+        signals.append(f"Domain is relatively new at {domain_age} days old")
 
     return features, signals
 
 
-# analyze: This function runs the full analysis pipeline on a given URL
-def analyze(url):
-
-    # Extract features and human readable signals from the URL
+def analyze(url: str) -> dict:
+    """Return `{ url, score, signals }` for FastAPI."""
     features, signals = extractFeatures(url)
-
-    '''
-    Build the feature vector in the exact same column order as training.
-    The model expects inputs in a specific order, like filling out a form,
-    every field has to be in the right place or the prediction will be wrong.
-    We wrap it in a DataFrame so the scaler recognizes the column names.
-    '''
     vector = pd.DataFrame(
         [features.get(col, 0) for col in selectedFeatures],
-        index=selectedFeatures
+        index=selectedFeatures,
     ).T
-
-    # Scale the vector using the same scaler that was used during training
     vector = scaler.transform(vector)
-
-    '''
-    predict_proba returns two probabilities: [prob of safe, prob of phishing]
-    We take index [1] which is the probability of it being phishing,
-    then multiply by 100 to convert it to a 0 to 100 risk score.
-    '''
     proba = model.predict_proba(vector)[0]
     score = int(round(proba[1] * 100))
 
-    # If the model flagged it but no specific signals were triggered
     if not signals and score >= 50:
         signals.append("Uncertain regarding phishing: no signals detected.")
-
-    # If everything looks clean
     if not signals:
         signals.append("No phishing signals detected")
 
-    # Return the score and signals, the frontend decides how to label it
-    return {
-        "url": url,
-        "score": score,
-        "signals": signals
-    }
+    return {"url": url, "score": score, "signals": signals}

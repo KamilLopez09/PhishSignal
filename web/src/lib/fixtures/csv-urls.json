@@ -1,0 +1,62 @@
+[
+  {
+    "url": "http://mirebawakaru.tumblr.com",
+    "label": "legitimate",
+    "expected": "legitimate"
+  },
+  {
+    "url": "http://www.poolcenter.com/",
+    "label": "legitimate",
+    "expected": "legitimate"
+  },
+  {
+    "url": "https://www.biostars.org/p/15879/",
+    "label": "legitimate",
+    "expected": "legitimate"
+  },
+  {
+    "url": "https://www.aeroversand.de/",
+    "label": "legitimate",
+    "expected": "legitimate"
+  },
+  {
+    "url": "http://www.swhowto.com/CoaxStrip.htm",
+    "label": "legitimate",
+    "expected": "legitimate"
+  },
+  {
+    "url": "http://www.ehow.com/facts_6806326_peer-support-specialist-job-description.html",
+    "label": "legitimate",
+    "expected": "legitimate"
+  },
+  {
+    "url": "http://www.eskaton.it/myaccount/Bank.php",
+    "label": "phishing",
+    "expected": "phishing"
+  },
+  {
+    "url": "https://xn--scurit-outlook-bkbf.yolasite.com/",
+    "label": "phishing",
+    "expected": "phishing"
+  },
+  {
+    "url": "http://www.honeysaienterprises.com/IF/IO/Account/index.php?email=cu=jdoe1@emailhost.c.kr",
+    "label": "phishing",
+    "expected": "phishing"
+  },
+  {
+    "url": "https://user67509874097802.el.r.appspot.com/app/index",
+    "label": "phishing",
+    "expected": "phishing"
+  },
+  {
+    "url": "http://nothingelsefilm.com/wp-content/themes/widescreen/includes/temp/ski",
+    "label": "phishing",
+    "expected": "phishing"
+  },
+  {
+    "url": "https://outlook-webapp-portal.el.r.appspot.com/",
+    "label": "phishing",
+    "expected": "phishing"
+  }
+]
