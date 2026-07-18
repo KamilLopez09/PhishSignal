@@ -1,17 +1,10 @@
 ﻿"use client";
 
 /**
- * GodUI Container Scroll — device frame that un-tilts on scroll.
+ * GodUI Container Scroll — tilted frame that settles on scroll.
+ * Pass `ignoreReducedMotion` when demos should keep the effect even if the OS
+ * prefers reduced motion.
  * @see https://godui.design/docs/components/layout/container-scroll
- * @see https://godui.design/r/container-scroll.json
- *
- * Canonical behavior: frame starts tilted (rotateX 20°), scales from 1.05→1,
- * and the headline rises (translateY 0→-100) as the section scrolls through
- * the viewport.
- *
- * IMPORTANT: When `prefers-reduced-motion: reduce` is on, GodUI disables the
- * scroll-linked animation. Pass `ignoreReducedMotion` to keep the effect for
- * demos (OS/browser accessibility settings often enable reduce by default).
  */
 import {
   motion,

@@ -10,7 +10,6 @@ Third-party UI used in `web/`. For install/attribution only.
 | Dropdown Menu | [GodUI](https://godui.design/docs/components/navigation/dropdown-menu) | `web/src/components/godui/dropdown-menu.tsx` → header nav |
 | Inspect browser chrome | [Uiverse grumpy-pug-86](https://uiverse.io/arthur_6104/grumpy-pug-86) | `.ps-browser` in `web/src/app/globals.css` |
 | Score donut | [Chakra Charts](https://chakra-ui.com/docs/charts/donut-chart#point-label) | `web/src/components/ScoreDonut.tsx` |
-| Card / button / input | [shadcn/ui](https://ui.shadcn.com/docs) | `web/src/components/ui/*` |
 | Icons | [Lucide](https://lucide.dev) | header / overview |
 | Motion | [Framer Motion](https://www.framer.com/motion/) | GodUI components |
 

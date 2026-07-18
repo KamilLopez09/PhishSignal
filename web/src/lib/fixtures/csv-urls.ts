@@ -1,7 +1,4 @@
-/**
- * Usable URLs sampled from `apidataset.csv` (status: legitimate | phishing).
- * Regenerate: `python scripts/export_csv_urls.py`
- */
+/** Sample URLs from `apidataset.csv` (legitimate | phishing) for Inspect test chips. */
 import samples from "@/lib/fixtures/csv-urls.json";
 
 export type CsvUrlSample = {

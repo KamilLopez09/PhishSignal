@@ -1,9 +1,3 @@
-/**
- * Browser client for the PhishSignal FastAPI service.
- * Set `NEXT_PUBLIC_API_BASE_URL` (e.g. http://localhost:8000 or /backend).
- *
- * @see docs/FRONTEND.md
- */
 import type { AnalyzeResponse } from "@/lib/types";
 import { serializeUrlInput } from "@/lib/url-input";
 
@@ -39,10 +33,7 @@ async function fetchJson(url: string, timeoutMs: number): Promise<Response> {
   }
 }
 
-/**
- * `GET /analyze?url=` — FastAPI contract.
- * Prefer passing already-serialized URLs from Dashboard; re-validates here.
- */
+/** `GET /analyze?url=` — FastAPI contract. */
 export async function analyzeUrl(url: string): Promise<AnalyzeResponse> {
   const base = getApiBaseUrl();
   if (!base) {

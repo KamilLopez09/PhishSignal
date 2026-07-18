@@ -1,11 +1,5 @@
 "use client";
 
-/**
- * Orchestrates: serialize URL → rate-limit gate → FastAPI JSON → UI panels.
- * Confidence + Flag Breakdown bind exclusively to `{ score, signals }` from analyze.
- *
- * @see docs/FRONTEND.md
- */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnalyzerCanvas } from "@/components/AnalyzerCanvas";
 import { ApiStatusBanner } from "@/components/ApiStatusBanner";
@@ -79,7 +73,6 @@ export function Dashboard() {
           const raw = liveConfigured
             ? await analyzeUrl(serialized.url)
             : mockAnalyze(serialized.url);
-          // Map API JSON → UI: score → donut/band, signals → flag breakdown.
           return toScanResult(raw.url, raw.score, raw.signals);
         });
 

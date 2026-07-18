@@ -1,6 +1,4 @@
-/**
- * Score → label bands (README). Frontend-owned; API returns score only.
- */
+/** Score → band label (frontend-owned; API returns score only). */
 import type { ScoreBand } from "@/lib/types";
 
 export function bandFromScore(score: number): ScoreBand {

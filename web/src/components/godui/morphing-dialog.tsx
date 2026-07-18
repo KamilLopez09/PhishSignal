@@ -1,12 +1,6 @@
 ﻿"use client";
 
-/**
- * GodUI Morphing Dialog — shared-layout card → modal transition.
- * @see https://godui.design/docs/components/overlays/morphing-dialog
- * @see https://godui.design/r/morphing-dialog.json
- *
- * Used in: `ScanOverview` metric tiles. Credits: docs/UI_SOURCES.md
- */
+/** @see https://godui.design/docs/components/overlays/morphing-dialog */
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import * as React from "react";
 import { createPortal } from "react-dom";

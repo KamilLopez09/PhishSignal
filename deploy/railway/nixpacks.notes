@@ -1,3 +1,0 @@
-# Nixpacks fallback (if DOCKERFILE builder is not used)
-# Procfile in this folder: web: uvicorn api:app --host 0.0.0.0 --port ${PORT:-8000}
-# Prefer deploy/docker/Dockerfile via railway.toml dockerfilePath.

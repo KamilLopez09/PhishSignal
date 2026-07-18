@@ -1,6 +1,5 @@
 "use client";
 
-/** Calm secondary panel (no scroll-hero physics). */
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 

@@ -1,12 +1,6 @@
 ﻿"use client";
 
-/**
- * GodUI Hold Confirm Button — press-and-hold to confirm.
- * @see https://godui.design/docs/components/buttons/hold-confirm-button
- * @see https://godui.design/r/hold-confirm-button.json
- *
- * Used in: `InspectLink` (ANALYZE). Credits: docs/UI_SOURCES.md
- */
+/** @see https://godui.design/docs/components/buttons/hold-confirm-button */
 import { animate, motion, useMotionValue } from "framer-motion";
 import * as React from "react";
 

@@ -1,11 +1,5 @@
 "use client";
 
-/**
- * URL entry — ANALYZE is the sole path that processes the input text
- * (serialize → rate-limit → API). Form Enter routes through the same handler.
- *
- * @see https://godui.design/docs/components/buttons/hold-confirm-button
- */
 import { FormEvent, useState } from "react";
 import { HoldConfirmButton } from "@/components/godui/hold-confirm-button";
 import {

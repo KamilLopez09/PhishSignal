@@ -1,7 +1,3 @@
-/**
- * Browser localStorage history for past analyzes.
- * @see docs/FRONTEND.md
- */
 import type { RecentScan, ScanResult } from "@/lib/types";
 
 const STORAGE_KEY = "phishsignal.history.v1";

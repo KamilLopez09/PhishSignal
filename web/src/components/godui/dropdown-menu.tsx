@@ -1,10 +1,6 @@
 ﻿"use client";
 
-/**
- * GodUI Dropdown Menu — spring panel with keyboard nav + submenus.
- * @see https://godui.design/docs/components/navigation/dropdown-menu
- * @see https://godui.design/r/dropdown-menu.json
- */
+/** @see https://godui.design/docs/components/navigation/dropdown-menu */
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import * as React from "react";
 
