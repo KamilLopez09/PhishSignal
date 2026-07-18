@@ -5,7 +5,7 @@
  * @see https://godui.design/docs/components/buttons/hold-confirm-button
  * @see https://godui.design/r/hold-confirm-button.json
  *
- * Used in: `InspectLink` (ANALYZE). Full index: docs/UI_COMPONENTS.md
+ * Used in: `InspectLink` (ANALYZE). Credits: docs/UI_SOURCES.md
  */
 import { animate, motion, useMotionValue } from "framer-motion";
 import * as React from "react";

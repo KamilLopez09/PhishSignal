@@ -5,7 +5,7 @@
  * @see https://godui.design/docs/components/overlays/morphing-dialog
  * @see https://godui.design/r/morphing-dialog.json
  *
- * Used in: `ScanOverview` metric tiles. Full index: docs/UI_COMPONENTS.md
+ * Used in: `ScanOverview` metric tiles. Credits: docs/UI_SOURCES.md
  */
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import * as React from "react";

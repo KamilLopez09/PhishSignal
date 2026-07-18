@@ -1,5 +1,5 @@
 /**
- * Score → label bands (PRD §7 / README). Frontend-owned; API returns score only.
+ * Score → label bands (README). Frontend-owned; API returns score only.
  */
 import type { ScoreBand } from "@/lib/types";
 

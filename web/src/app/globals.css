@@ -61,7 +61,7 @@
 }
 
 /* Uiverse: https://uiverse.io/arthur_6104/grumpy-pug-86 — Inspect mini browser
-   See docs/UI_COMPONENTS.md */
+   See docs/UI_SOURCES.md */
 @layer components {
   .ps-browser {
     width: min(100%, 420px);

@@ -1,6 +1,6 @@
 /**
  * Frontend types aligned with FastAPI `GET /analyze` (Python unchanged).
- * @see docs/BACKEND_INTEGRATION.md
+ * @see docs/FRONTEND.md
  */
 
 /** Wire response from `GET /analyze?url=` */

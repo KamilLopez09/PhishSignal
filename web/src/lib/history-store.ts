@@ -1,6 +1,6 @@
 /**
- * Anonymous local history for past analyzes (no login required for MVP).
- * @see docs/AUTH_AND_STORAGE.md
+ * Browser localStorage history for past analyzes.
+ * @see docs/FRONTEND.md
  */
 import type { RecentScan, ScanResult } from "@/lib/types";
 

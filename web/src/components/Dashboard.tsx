@@ -4,8 +4,7 @@
  * Orchestrates: serialize URL → rate-limit gate → FastAPI JSON → UI panels.
  * Confidence + Flag Breakdown bind exclusively to `{ score, signals }` from analyze.
  *
- * @see docs/BACKEND_INTEGRATION.md
- * @see docs/AUTH_AND_STORAGE.md
+ * @see docs/FRONTEND.md
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnalyzerCanvas } from "@/components/AnalyzerCanvas";

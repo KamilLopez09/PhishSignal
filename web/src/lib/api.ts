@@ -2,7 +2,7 @@
  * Browser client for the PhishSignal FastAPI service.
  * Set `NEXT_PUBLIC_API_BASE_URL` (e.g. http://localhost:8000 or /backend).
  *
- * @see docs/BACKEND_INTEGRATION.md
+ * @see docs/FRONTEND.md
  */
 import type { AnalyzeResponse } from "@/lib/types";
 import { serializeUrlInput } from "@/lib/url-input";
