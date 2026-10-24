@@ -56,11 +56,3 @@ export function prependHistory(result: ScanResult): StoredScan[] {
   }
   return next;
 }
-
-export function toRecentScans(items: StoredScan[]): RecentScan[] {
-  return items.map(({ url, score, relativeTime }) => ({
-    url,
-    score,
-    relativeTime,
-  }));
-}

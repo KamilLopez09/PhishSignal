@@ -1,9 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  loadHistory,
-  prependHistory,
-  toRecentScans,
-} from "@/lib/history-store";
+import { loadHistory, prependHistory } from "@/lib/history-store";
 import type { ScanResult } from "@/lib/types";
 
 const memory = new Map<string, string>();
@@ -45,16 +41,5 @@ describe("history-store", () => {
     expect(history).toHaveLength(1);
     expect(history[0]?.score).toBe(30);
     expect(history[0]?.relativeTime).toBe("JUST NOW");
-  });
-
-  it("maps to RecentScan rows", () => {
-    const stored = prependHistory(sample);
-    expect(toRecentScans(stored)).toEqual([
-      {
-        url: sample.url,
-        score: sample.score,
-        relativeTime: "JUST NOW",
-      },
-    ]);
   });
 });

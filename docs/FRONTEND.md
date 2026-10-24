@@ -108,7 +108,7 @@ Login is not required for analyze. History stays in the browser for the MVP.
 |---|---|
 | `lib/types.ts` | `AnalyzeResponse`, `ScanResult` |
 | `lib/bands.ts` | Score → band |
-| `lib/api.ts` | `analyzeUrl`, `checkHealth`, hosted default vs mock |
+| `lib/api.ts` | `analyzeUrl`, hosted default vs mock |
 | `lib/url-input.ts` | Sanitize / serialize paste |
 | `lib/analyze-gate.ts` | Single-flight + throttle + token bucket |
 | `lib/history-store.ts` | localStorage history |

@@ -35,7 +35,7 @@ The UI defaults to the hosted FastAPI:
 
 | Call | Purpose |
 |---|---|
-| `GET https://phishsignal.onrender.com/health` | Reachability check used by the client; not shown as a banner |
+| `GET https://phishsignal.onrender.com/health` | Hosted API reachability. The site does not call it. |
 | `GET https://phishsignal.onrender.com/analyze?url=HERE` | `{ url, score, signals }` |
 
 Override with `NEXT_PUBLIC_API_BASE_URL`:
