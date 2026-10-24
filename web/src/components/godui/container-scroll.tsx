@@ -111,7 +111,7 @@ const ContainerScroll = React.forwardRef<HTMLDivElement, ContainerScrollProps>(
       >
         {header ? (
           <motion.div
-            style={reduce ? undefined : { translateY }}
+            style={reduce || size === "card" ? undefined : { translateY }}
             className={cn(
               "mx-auto text-center",
               size === "card" ? "mb-4 max-w-xl" : "mb-10 max-w-3xl",

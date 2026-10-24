@@ -2,18 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnalyzerCanvas } from "@/components/AnalyzerCanvas";
-import { ApiStatusBanner } from "@/components/ApiStatusBanner";
 import { AppHeader, type AppPage } from "@/components/AppHeader";
 import { FlagBreakdown } from "@/components/FlagBreakdown";
 import { RecentScansHistory } from "@/components/RecentScansHistory";
 import { ReportsInbox } from "@/components/ReportsInbox";
 import { ScanOverview } from "@/components/ScanOverview";
 import { AnalyzeGate, formatGateError } from "@/lib/analyze-gate";
-import {
-  analyzeUrl,
-  checkHealth,
-  isLiveApiConfigured,
-} from "@/lib/api";
+import { analyzeUrl, isLiveApiConfigured } from "@/lib/api";
 import { toScanResult } from "@/lib/bands";
 import {
   feedbackByUrl,
@@ -45,9 +40,6 @@ export function Dashboard() {
   );
   const [status, setStatus] = useState<AnalyzeStatus>("idle");
   const [error, setError] = useState<string | null>(null);
-  const [apiHealthy, setApiHealthy] = useState<boolean | null>(
-    liveConfigured ? null : false,
-  );
 
   useEffect(() => {
     setHistory(loadHistory());
@@ -61,22 +53,6 @@ export function Dashboard() {
     setReports(next);
     setVerdicts(feedbackByUrl(next));
   }, []);
-
-  useEffect(() => {
-    if (!liveConfigured) {
-      setApiHealthy(false);
-      return;
-    }
-    setApiHealthy(null);
-    let active = true;
-    void (async () => {
-      const ok = await checkHealth();
-      if (active) setApiHealthy(ok);
-    })();
-    return () => {
-      active = false;
-    };
-  }, [liveConfigured]);
 
   const onAnalyze = useCallback(
     async (rawInput: string) => {
@@ -107,12 +83,10 @@ export function Dashboard() {
         const next = gated.value;
         setResult(next);
         setHistory(prependHistory(next));
-        if (liveConfigured) setApiHealthy(true);
         setStatus("idle");
       } catch (err) {
         setStatus("error");
         setError(err instanceof Error ? err.message : "Analyze failed");
-        if (liveConfigured) setApiHealthy(false);
       }
     },
     [gate, liveConfigured],
@@ -125,12 +99,10 @@ export function Dashboard() {
       <AppHeader
         page={page}
         onPageChange={setPage}
-        liveApi={liveConfigured && apiHealthy === true}
+        liveApi={liveConfigured}
       />
       <main className="px-5 py-6 md:px-8 md:py-8">
         <div className="mx-auto flex max-w-[1100px] flex-col gap-6">
-          <ApiStatusBanner configured={liveConfigured} healthy={apiHealthy} />
-
           {page === "dashboard" ? (
             <>
               <AnalyzerCanvas

@@ -123,7 +123,7 @@ Login is not required for analyze. History stays in the browser for the MVP.
 
 ## Smoke check
 
-1. Hosted or local `/health` → ok; header chip shows **API live**. No working banner on the dashboard.
+1. Header chip shows **API live** when the hosted or local API is configured. No status banner on the dashboard.
 2. Hold ANALYZE on a URL → donut, band, and flags match `curl` JSON
 3. History prepends the URL
 4. Stop the API → next analyze shows an error without crashing the page

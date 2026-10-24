@@ -1,8 +1,8 @@
 import type { AnalyzeResponse } from "@/lib/types";
 import { serializeUrlInput } from "@/lib/url-input";
 
-const ANALYZE_TIMEOUT_MS = 15_000;
-const HEALTH_TIMEOUT_MS = 4_000;
+const ANALYZE_TIMEOUT_MS = 60_000;
+const HEALTH_TIMEOUT_MS = 45_000;
 
 /** Hosted FastAPI. Override with NEXT_PUBLIC_API_BASE_URL; use `mock` for offline. */
 export const DEFAULT_API_BASE = "https://phishsignal.onrender.com";
