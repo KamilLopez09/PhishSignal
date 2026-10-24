@@ -1,5 +1,5 @@
 /**
- * Local fixtures used when `NEXT_PUBLIC_API_BASE_URL` is unset.
+ * Local fixtures used when `NEXT_PUBLIC_API_BASE_URL=mock`.
  * Shapes match FastAPI `{ url, score, signals }` + UI-only overview stats.
  */
 import { toScanResult } from "@/lib/bands";

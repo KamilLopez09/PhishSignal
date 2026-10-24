@@ -4,12 +4,12 @@ Next.js analyzer UI for the PhishSignal API.
 
 ```bash
 cd web
-cp .env.example .env.local   # NEXT_PUBLIC_API_BASE_URL=/backend
+cp .env.example .env.local   # unset → hosted API; /backend for local FastAPI
 npm install
 npm run dev
 ```
 
-Start the API from the repo root first (see [`../docs/FRONTEND.md`](../docs/FRONTEND.md)).
+Unset env calls `https://phishsignal.onrender.com/health` and `/analyze?url=`. For a local API, see [`../docs/FRONTEND.md`](../docs/FRONTEND.md).
 
 | Command | Purpose |
 |---|---|
