@@ -8,7 +8,7 @@ The header dropdown switches **Dashboard** (analyzer) and **History** (scans + r
 
 ## Where the taps appear
 
-- **Confidence score** (the scale next to ANALYZE) — after a live result: “Was this classification right?” with **Looks right** and **Report issue**.
+- **Confidence score** (the scale next to ANALYZE) — after a live result: optional note (string, 25 words max) plus **Looks right** / **Report issue**.
 - **Recent Scans History** — the same taps under each URL entry (score + band).
 - **History → Submitted reports** — the inbox for those taps.
 
@@ -22,6 +22,7 @@ Reports stay in this browser (`localStorage` key `phishsignal.feedback.v1`) and 
   "score": 42,
   "band": "UNCERTAIN",
   "verdict": "misclassified",
+  "note": "looks more like a login phish",
   "reportedAt": "2026-10-24T16:00:00.000Z"
 }
 ```

@@ -33,6 +33,11 @@ export function ReportsInbox({ reports }: ReportsInboxProps) {
               <p className="mt-1 text-[11px] uppercase tracking-wide text-ps-white/70">
                 {verdictLabel(report.verdict)} · {report.band} · {report.score}
               </p>
+              {report.note ? (
+                <p className="mt-2 text-sm leading-snug text-ps-white/80">
+                  {report.note}
+                </p>
+              ) : null}
             </li>
           ))}
         </ul>

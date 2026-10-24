@@ -1,6 +1,13 @@
 "use client";
 
-import type { FeedbackInput, FeedbackVerdict } from "@/lib/feedback-store";
+import { useState } from "react";
+import {
+  clipNote,
+  MAX_NOTE_WORDS,
+  noteWordCount,
+  type FeedbackInput,
+  type FeedbackVerdict,
+} from "@/lib/feedback-store";
 
 type ReportFeedbackProps = {
   url: string;
@@ -24,9 +31,12 @@ export function ReportFeedback({
   onFeedback,
   showCopy = false,
 }: ReportFeedbackProps) {
+  const [note, setNote] = useState("");
+  const words = noteWordCount(note);
+
   function tap(next: FeedbackVerdict) {
     if (verdict) return;
-    onFeedback({ url, score, band, verdict: next });
+    onFeedback({ url, score, band, verdict: next, note: clipNote(note) });
   }
 
   return (
@@ -44,6 +54,21 @@ export function ReportFeedback({
         <>
           <p className="text-[11px] text-ps-white/55">
             Was this classification right?
+          </p>
+          <label className="w-full">
+            <span className="sr-only">Feedback note, 25 words max</span>
+            <input
+              type="text"
+              inputMode="text"
+              value={note}
+              maxLength={200}
+              placeholder="Optional note (25 words)"
+              onChange={(e) => setNote(clipNote(e.target.value))}
+              className="w-full rounded-lg border border-border bg-[#1f1012] px-2.5 py-1.5 text-[11px] text-ps-white placeholder:text-ps-white/35"
+            />
+          </label>
+          <p className="text-[10px] text-ps-white/40">
+            {words}/{MAX_NOTE_WORDS} words
           </p>
           <div className="flex flex-wrap items-center justify-center gap-2">
             <button
