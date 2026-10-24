@@ -33,16 +33,17 @@ python -m venv .venv
 
 # Web
 cd web
-cp .env.example .env.local   # NEXT_PUBLIC_API_BASE_URL=/backend
+cp .env.example .env.local   # unset → hosted API; /backend for local FastAPI
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Without the env var, the UI uses offline mock data.
+Open [http://localhost:3000](http://localhost:3000). Unset env calls `https://phishsignal.onrender.com`. Set `NEXT_PUBLIC_API_BASE_URL=mock` for offline fixtures.
 
 ## Docs
 
 | Doc | Path |
 |---|---|
 | Frontend ↔ API integration | [`docs/FRONTEND.md`](docs/FRONTEND.md) |
+| Misclassification reporting | [`docs/REPORTING.md`](docs/REPORTING.md) |
 | UI component sources | [`docs/UI_SOURCES.md`](docs/UI_SOURCES.md) |

@@ -15,9 +15,15 @@ import {
 } from "@/lib/api";
 import { toScanResult } from "@/lib/bands";
 import {
+  feedbackByUrl,
+  loadFeedback,
+  saveFeedback,
+  type FeedbackInput,
+  type FeedbackVerdict,
+} from "@/lib/feedback-store";
+import {
   loadHistory,
   prependHistory,
-  toRecentScans,
   type StoredScan,
 } from "@/lib/history-store";
 import { INITIAL_RESULT, mockAnalyze } from "@/lib/mock-dashboard";
@@ -30,6 +36,9 @@ export function Dashboard() {
 
   const [result, setResult] = useState<ScanResult | null>(null);
   const [history, setHistory] = useState<StoredScan[]>([]);
+  const [verdicts, setVerdicts] = useState<Record<string, FeedbackVerdict>>(
+    {},
+  );
   const [status, setStatus] = useState<AnalyzeStatus>("idle");
   const [error, setError] = useState<string | null>(null);
   const [apiHealthy, setApiHealthy] = useState<boolean | null>(
@@ -38,6 +47,11 @@ export function Dashboard() {
 
   useEffect(() => {
     setHistory(loadHistory());
+    setVerdicts(feedbackByUrl(loadFeedback()));
+  }, []);
+
+  const onFeedback = useCallback((entry: FeedbackInput) => {
+    setVerdicts(feedbackByUrl(saveFeedback(entry)));
   }, []);
 
   useEffect(() => {
@@ -111,10 +125,16 @@ export function Dashboard() {
             error={error}
             onAnalyze={onAnalyze}
             hasLiveResult={result != null}
+            verdict={result ? verdicts[result.url] : undefined}
+            onFeedback={onFeedback}
           />
 
           <div className="grid gap-4 lg:grid-cols-[1fr_1.4fr] lg:items-stretch">
-            <RecentScansHistory scans={toRecentScans(history)} />
+            <RecentScansHistory
+              scans={history}
+              verdicts={verdicts}
+              onFeedback={onFeedback}
+            />
             <ScanOverview history={history} />
           </div>
 

@@ -38,17 +38,21 @@ Open [http://localhost:3000](http://localhost:3000).
 
 | Variable | Purpose |
 |---|---|
-| `NEXT_PUBLIC_API_BASE_URL` | API base used by the browser. Prefer `/backend` (Next rewrite). |
+| `NEXT_PUBLIC_API_BASE_URL` | API base used by the browser. Unset defaults to `https://phishsignal.onrender.com`. |
 | `PHISHSIGNAL_API_PROXY` | Rewrite target (default `http://127.0.0.1:8000`). Server-side only. |
 
 ```bash
-# web/.env.local
+# web/.env.local — hosted API (same as unset default)
+# NEXT_PUBLIC_API_BASE_URL=https://phishsignal.onrender.com
+
+# Local FastAPI via Next rewrite
 NEXT_PUBLIC_API_BASE_URL=/backend
 ```
 
-- With `/backend`, Next proxies to FastAPI (`web/next.config.mjs`) — avoids CORS during local dev.
+- Unset: UI calls `https://phishsignal.onrender.com/health` and `/analyze?url=`
+- With `/backend`, Next proxies to local FastAPI (`web/next.config.mjs`) — avoids CORS during local dev.
 - Direct: `NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000`
-- Unset: UI uses offline `mockAnalyze()`; header shows mock mode.
+- `mock`: UI uses offline `mockAnalyze()`; header shows mock mode.
 
 Restart `npm run dev` after env changes.
 
@@ -91,6 +95,7 @@ Same bands as the root README / upstream product copy.
 | Band label | `bandFromScore(score)` |
 | Flag Breakdown | `signals[]` |
 | Recent History | localStorage (`phishsignal.history.v1`) after a successful scan |
+| Report taps | localStorage (`phishsignal.feedback.v1`) per URL |
 | Scan Overview | Derived from local history |
 
 Paste URL → hold **ANALYZE** → gate (throttle + token bucket) → `analyzeUrl` → results + history.
@@ -103,20 +108,22 @@ Login is not required for analyze. History stays in the browser for the MVP.
 |---|---|
 | `lib/types.ts` | `AnalyzeResponse`, `ScanResult` |
 | `lib/bands.ts` | Score → band |
-| `lib/api.ts` | `analyzeUrl`, `checkHealth`, mock vs live |
+| `lib/api.ts` | `analyzeUrl`, `checkHealth`, hosted default vs mock |
 | `lib/url-input.ts` | Sanitize / serialize paste |
 | `lib/analyze-gate.ts` | Single-flight + throttle + token bucket |
 | `lib/history-store.ts` | localStorage history |
-| `lib/mock-dashboard.ts` | Offline analyze when env unset |
+| `lib/feedback-store.ts` | localStorage misclassification reports |
+| `lib/mock-dashboard.ts` | Offline analyze when `NEXT_PUBLIC_API_BASE_URL=mock` |
 | `components/Dashboard.tsx` | Orchestrates analyze → panels |
 | `components/InspectLink.tsx` | URL input + Hold Confirm |
-| `components/ResultsPanel.tsx` | Score + band |
+| `components/ResultsPanel.tsx` | Score + band + report taps |
+| `components/ReportFeedback.tsx` | Looks right / Report issue |
 | `components/FlagBreakdown.tsx` | Signal list |
 | `next.config.mjs` | `/backend/*` → FastAPI rewrite |
 
 ## Smoke check
 
-1. API `/health` → ok; header chip shows **API live**
+1. Hosted or local `/health` → ok; header chip shows **API live**. No working banner on the dashboard.
 2. Hold ANALYZE on a URL → donut, band, and flags match `curl` JSON
 3. History prepends the URL
 4. Stop the API → next analyze shows an error without crashing the page

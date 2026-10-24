@@ -7,6 +7,7 @@
 import { DashboardScrollCard } from "@/components/DashboardScrollCard";
 import { InspectLink } from "@/components/InspectLink";
 import { ResultsPanel } from "@/components/ResultsPanel";
+import type { FeedbackInput, FeedbackVerdict } from "@/lib/feedback-store";
 import type { AnalyzeStatus, ScanResult } from "@/lib/types";
 
 type AnalyzerCanvasProps = {
@@ -14,7 +15,9 @@ type AnalyzerCanvasProps = {
   status: AnalyzeStatus;
   error: string | null;
   hasLiveResult: boolean;
+  verdict?: FeedbackVerdict;
   onAnalyze: (rawInput: string) => void | Promise<void>;
+  onFeedback: (entry: FeedbackInput) => void;
 };
 
 export function AnalyzerCanvas({
@@ -22,7 +25,9 @@ export function AnalyzerCanvas({
   status,
   error,
   hasLiveResult,
+  verdict,
   onAnalyze,
+  onFeedback,
 }: AnalyzerCanvasProps) {
   return (
     <DashboardScrollCard
@@ -48,6 +53,8 @@ export function AnalyzerCanvas({
           status={status}
           error={error}
           hasLiveResult={hasLiveResult}
+          verdict={verdict}
+          onFeedback={onFeedback}
         />
       </div>
     </DashboardScrollCard>
