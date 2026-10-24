@@ -2,16 +2,19 @@
 
 If PhishSignal misclassifies a URL, users can report the issue on the website. That feedback identifies potential weaknesses, incorrect results, and what to improve. Phishing tactics keep changing, so work does not end when the model makes a prediction — we keep testing it, learning from mistakes, and making it more useful over time.
 
-This is the reporting interface: two taps under each analyzed result. No account, form, or extra API call.
+This is the reporting interface: two taps under each analyzed result. A tap is stored on this site and listed on the **History** page (Submitted reports). There is no remote report API; the hosted service only exposes `/health` and `/analyze`.
+
+The header dropdown switches **Dashboard** (analyzer) and **History** (scans + reports). Settings was removed — it had no page.
 
 ## Where the taps appear
 
 - **Confidence score** (the scale next to ANALYZE) — after a live result: “Was this classification right?” with **Looks right** and **Report issue**.
-- **Recent Scans History** — the same taps under each of the last five URL entries (score + band).
+- **Recent Scans History** — the same taps under each URL entry (score + band).
+- **History → Submitted reports** — the inbox for those taps.
 
 A tap locks that URL and shows a short thank-you. The last verdict for a URL wins.
 
-Reports stay in this browser (`localStorage` key `phishsignal.feedback.v1`):
+Reports stay in this browser (`localStorage` key `phishsignal.feedback.v1`) and are shown on History:
 
 ```json
 {

@@ -5,20 +5,20 @@ import { ReportFeedback } from "@/components/ReportFeedback";
 import type { FeedbackInput, FeedbackVerdict } from "@/lib/feedback-store";
 import type { StoredScan } from "@/lib/history-store";
 
-const VISIBLE = 5;
-
 type RecentScansHistoryProps = {
   scans: StoredScan[];
   verdicts: Record<string, FeedbackVerdict>;
   onFeedback: (entry: FeedbackInput) => void;
+  limit?: number;
 };
 
 export function RecentScansHistory({
   scans,
   verdicts,
   onFeedback,
+  limit = 5,
 }: RecentScansHistoryProps) {
-  const rows = scans.slice(0, VISIBLE);
+  const rows = scans.slice(0, limit);
 
   return (
     <ProductCard title="Recent Scans History">

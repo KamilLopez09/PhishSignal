@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnalyzerCanvas } from "@/components/AnalyzerCanvas";
 import { ApiStatusBanner } from "@/components/ApiStatusBanner";
-import { AppHeader } from "@/components/AppHeader";
+import { AppHeader, type AppPage } from "@/components/AppHeader";
 import { FlagBreakdown } from "@/components/FlagBreakdown";
 import { RecentScansHistory } from "@/components/RecentScansHistory";
+import { ReportsInbox } from "@/components/ReportsInbox";
 import { ScanOverview } from "@/components/ScanOverview";
 import { AnalyzeGate, formatGateError } from "@/lib/analyze-gate";
 import {
@@ -20,6 +21,7 @@ import {
   saveFeedback,
   type FeedbackInput,
   type FeedbackVerdict,
+  type StoredFeedback,
 } from "@/lib/feedback-store";
 import {
   loadHistory,
@@ -34,8 +36,10 @@ export function Dashboard() {
   const liveConfigured = isLiveApiConfigured();
   const gate = useMemo(() => new AnalyzeGate(), []);
 
+  const [page, setPage] = useState<AppPage>("dashboard");
   const [result, setResult] = useState<ScanResult | null>(null);
   const [history, setHistory] = useState<StoredScan[]>([]);
+  const [reports, setReports] = useState<StoredFeedback[]>([]);
   const [verdicts, setVerdicts] = useState<Record<string, FeedbackVerdict>>(
     {},
   );
@@ -47,11 +51,15 @@ export function Dashboard() {
 
   useEffect(() => {
     setHistory(loadHistory());
-    setVerdicts(feedbackByUrl(loadFeedback()));
+    const stored = loadFeedback();
+    setReports(stored);
+    setVerdicts(feedbackByUrl(stored));
   }, []);
 
   const onFeedback = useCallback((entry: FeedbackInput) => {
-    setVerdicts(feedbackByUrl(saveFeedback(entry)));
+    const next = saveFeedback(entry);
+    setReports(next);
+    setVerdicts(feedbackByUrl(next));
   }, []);
 
   useEffect(() => {
@@ -114,35 +122,53 @@ export function Dashboard() {
 
   return (
     <div className="min-h-screen bg-ps-bg font-sans text-ps-ink">
-      <AppHeader liveApi={liveConfigured && apiHealthy === true} />
+      <AppHeader
+        page={page}
+        onPageChange={setPage}
+        liveApi={liveConfigured && apiHealthy === true}
+      />
       <main className="px-5 py-6 md:px-8 md:py-8">
         <div className="mx-auto flex max-w-[1100px] flex-col gap-6">
           <ApiStatusBanner configured={liveConfigured} healthy={apiHealthy} />
 
-          <AnalyzerCanvas
-            result={displayResult}
-            status={status}
-            error={error}
-            onAnalyze={onAnalyze}
-            hasLiveResult={result != null}
-            verdict={result ? verdicts[result.url] : undefined}
-            onFeedback={onFeedback}
-          />
+          {page === "dashboard" ? (
+            <>
+              <AnalyzerCanvas
+                result={displayResult}
+                status={status}
+                error={error}
+                onAnalyze={onAnalyze}
+                hasLiveResult={result != null}
+                verdict={result ? verdicts[result.url] : undefined}
+                onFeedback={onFeedback}
+              />
 
-          <div className="grid gap-4 lg:grid-cols-[1fr_1.4fr] lg:items-stretch">
-            <RecentScansHistory
-              scans={history}
-              verdicts={verdicts}
-              onFeedback={onFeedback}
-            />
-            <ScanOverview history={history} />
-          </div>
+              <div className="grid gap-4 lg:grid-cols-[1fr_1.4fr] lg:items-stretch">
+                <RecentScansHistory
+                  scans={history}
+                  verdicts={verdicts}
+                  onFeedback={onFeedback}
+                />
+                <ScanOverview history={history} />
+              </div>
 
-          <FlagBreakdown
-            signals={displayResult.signals}
-            url={displayResult.url}
-            fromApi={result != null}
-          />
+              <FlagBreakdown
+                signals={displayResult.signals}
+                url={displayResult.url}
+                fromApi={result != null}
+              />
+            </>
+          ) : (
+            <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+              <RecentScansHistory
+                scans={history}
+                verdicts={verdicts}
+                onFeedback={onFeedback}
+                limit={40}
+              />
+              <ReportsInbox reports={reports} />
+            </div>
+          )}
         </div>
       </main>
     </div>
